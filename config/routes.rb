@@ -7,4 +7,8 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+  #
+  scope '/api/v1' do
+    get "/health" => "application#health", as: :health_check
+  end
 end
