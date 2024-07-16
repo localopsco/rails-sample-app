@@ -10,5 +10,7 @@ Rails.application.routes.draw do
   #
   scope '/api/v1' do
     get "/health" => "application#health", as: :health_check
+
+    resources :tasks
   end
 end
