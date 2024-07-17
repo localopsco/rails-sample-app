@@ -1,5 +1,5 @@
 class TasksController < ApplicationController
-  before_action :set_task, only: %i[ show update destroy ]
+  before_action :set_task, only: %i[ show update destroy create_attachment delete_attachment ]
 
   # GET /tasks
   def index
@@ -38,6 +38,23 @@ class TasksController < ApplicationController
     @task.destroy!
   end
 
+
+  def create_attachment
+    #clear existing attachments
+    @task.attachment.purge if @task.attachment.attached?
+
+    @task = @task.attachment.attach(params[:file])
+    if @task.save
+      render json: @task, status: :created, location: @task
+    else
+      render json: @task.errors, status: :unprocessable_entity
+    end
+  end
+
+  def delete_attachment
+    @task.attachment.purge
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_task
@@ -46,6 +63,6 @@ class TasksController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def task_params
-      params.require(:task).permit(:title, :description, :is_completed)
+      params.require(:task).permit(:title, :description, :is_completed, :attachment)
     end
 end

@@ -10,7 +10,16 @@ Rails.application.routes.draw do
   #
   scope '/api/v1' do
     get "/health" => "application#health", as: :health_check
+    get "/meta" => "application#meta", as: :meta
 
-    resources :tasks
+    resources :tasks do 
+      member do 
+        post "attach" => "tasks#create_attachment"
+        delete "attach" => "tasks#delete_attachment"
+
+        post "attachments" => "tasks#create_attachment"
+        delete "attachments" => "tasks#delete_attachment"
+      end
+    end
   end
 end
