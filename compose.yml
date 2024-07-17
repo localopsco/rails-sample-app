@@ -1,0 +1,58 @@
+name: rails-sample-app
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=rails_sample_app_development
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: '.'
+    depends_on:
+      - db
+    volumes:
+      - .:/myapp
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: postgres://postgres:password@db:5432/rails_sample_app_development
+    command: > 
+      bash -c "rm -f tmp/pids/server.pid &&
+               bundle exec rake db:create db:migrate &&
+               bundle exec rails server -b 0.0.0.0"
+
+  client:
+    image: public.ecr.aws/r5p6q2u1/js-example-spa:v1.0.2
+    depends_on:
+      - backend
+    restart: always
+    environment:
+      PORT: 3001
+    ports:
+      - "3001:3001"
+
+  gateway:
+    image: nginx:alpine
+    depends_on:
+      - backend
+      - client
+    volumes:
+      - ./nginx:/etc/nginx/templates
+    ports:
+      - "5000:80"
+    environment:
+      - CLIENT_PORT=3001
+      - BACKEND_PORT=3000
+
+volumes:
+  pgdata:
